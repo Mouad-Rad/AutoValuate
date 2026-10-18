@@ -15,7 +15,7 @@ The project runs locally and is made of three parts: a scraper that builds the d
 ## Project structure
 
 ```
-Pfm-ML/
+AutoValuate/
   app/            Flask API (api.py)
   client/         React frontend (form + result components)
   data/           raw scraped data
@@ -53,8 +53,8 @@ The cleaning and modeling work is in `src/preprocessing.ipynb` and `src/clean_co
 Clone the repository:
 
 ```
-git clone https://github.com/Mouad-Rad/Pfm-ML.git
-cd Pfm-ML
+git clone https://github.com/Mouad-Rad/AutoValuate.git
+cd AutoValuate
 ```
 
 Backend:
