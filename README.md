@@ -1,71 +1,107 @@
 # AutoValuate
 
-Car price prediction for the Moroccan used-car market. You fill in a car's details (brand, model, year, mileage, etc.) and the app returns an estimated price based on a model trained on listings scraped from Avito.ma.
+AutoValuate is a car price prediction application for the Moroccan used-car market. The user enters the characteristics of a vehicle through a web form, and the app returns an estimated price using a machine learning model trained on real listings from Moroccan websites.
 
-Live version: https://autovaluate.vercel.app
+The project runs locally and is made of three parts: a scraper that builds the dataset, a notebook pipeline that cleans the data and trains the model, and a web app (React + Flask) that serves predictions.
 
-## Stack
+## Technologies
 
 - Frontend: React, Axios
 - Backend: Flask, Flask-CORS
-- ML: Scikit-learn, XGBoost, Pandas, NumPy, Joblib
-- Scraping: Requests, BeautifulSoup
+- Machine learning: Scikit-learn, XGBoost, Pandas, NumPy, Joblib
+- Data collection: Requests, BeautifulSoup
+- Analysis: Jupyter, Matplotlib, Seaborn
 
 ## Project structure
 
-    app/        Flask API (api.py)
-    client/     React frontend
-    data/       raw scraped data (car_details.csv)
-    src/        scraper, notebooks, trained model (car_price_model.pkl)
-    report/     project report
+```
+Pfm-ML/
+  app/            Flask API (api.py)
+  client/         React frontend (form + result components)
+  data/           raw scraped data
+  src/            scraper, notebooks, cleaned dataset, trained model
+  report/         project report
+  requirements.txt
+```
 
-## How it works
+## Dataset
 
-The data comes from `src/scraping.py`, which scrapes used-car listings from Avito.ma. The notebooks in `src/` clean the data and compare a few regression models (Linear Regression, Random Forest, XGBoost) with GridSearchCV. The trained pipeline is saved with Joblib and loaded by the Flask API, which exposes a single `/predict` endpoint. The React app sends the form values to that endpoint and shows the result.
+The data was scraped from Avito.ma with `src/scraping.py`, which collects used-car listings page by page using multiple threads. The raw file is stored in `data/raw/car_details.csv`, and the cleaned version used for training is `src/cleaned_data.csv`.
 
-The model expects these features: Marque, Modèle, Année, Type de carburant, Puissance fiscale, Kilométrage, Nombre de portes, Première main, État, Boîte à vitesses, Origine.
+Each listing is described by:
 
-## Running locally
+- Marque (brand)
+- Modèle
+- Année
+- Type de carburant
+- Puissance fiscale
+- Kilométrage
+- Nombre de portes
+- Première main
+- État
+- Boîte à vitesses
+- Origine
+
+The target is the listing price.
+
+## Model
+
+The cleaning and modeling work is in `src/preprocessing.ipynb` and `src/clean_code.ipynb`. It covers missing values, outliers, encoding of categorical variables and scaling, all wrapped in Scikit-learn pipelines. Three regressors were compared: Linear Regression, Random Forest and XGBoost, with hyperparameters tuned using GridSearchCV and evaluated with R², MAE and RMSE. The final model is saved with Joblib as `src/car_price_model.pkl`.
+
+## Installation
+
+Clone the repository:
+
+```
+git clone https://github.com/Mouad-Rad/Pfm-ML.git
+cd Pfm-ML
+```
 
 Backend:
 
-    pip install -r requirements.txt
-    cd app
-    python api.py
+```
+python -m venv venv
+venv\Scripts\activate          (Linux/Mac: source venv/bin/activate)
+pip install -r requirements.txt
+```
 
-The API starts on http://127.0.0.1:5000. Note that `api.py` currently loads the model from an absolute Windows path, so change that line to point to `src/car_price_model.pkl` on your machine first.
+In `app/api.py`, the model is loaded with an absolute path. Update it so it points to `src/car_price_model.pkl` on your machine, then start the API:
+
+```
+cd app
+python api.py
+```
+
+The API runs on `http://127.0.0.1:5000`.
 
 Frontend:
 
-    cd client
-    npm install
-    npm start
+```
+cd client
+npm install
+npm start
+```
 
-The app opens on http://localhost:3000.
+The app opens on `http://localhost:3000`.
 
-## API
+## Usage
 
-`POST /predict` with a JSON body containing the features listed above:
+Open the app, fill in the vehicle details (brand, model, year, fuel type, mileage, and so on) and submit the form. The estimated price is displayed right below.
 
-    {
-      "Marque": "Dacia",
-      "Modèle": "Logan",
-      "Année": 2018,
-      "Type de carburant": "Diesel",
-      "Puissance fiscale": 6,
-      "Kilométrage": 120000,
-      "Nombre de portes": 5,
-      "Première main": "Oui",
-      "État": "Bon",
-      "Boîte à vitesses": "Manuelle",
-      "Origine": "WW au Maroc"
-    }
+The API can also be called directly:
 
-Returns:
+```
+POST /predict
+Content-Type: application/json
+```
 
-    { "predicted_price": 95000.0 }
+The body must contain all eleven features listed in the dataset section. The response looks like this:
 
-If a feature is missing the API returns a 400 with the list of missing fields.
+```
+{ "predicted_price": 95000.0 }
+```
+
+If a feature is missing, the API answers with a 400 error listing the missing fields.
 
 ## Author
 
